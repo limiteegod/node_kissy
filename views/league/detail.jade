@@ -1,0 +1,63 @@
+doctype html
+html(lang="en")
+    head
+        include ../includes/script.jade
+        script(type='text/javascript').
+            KISSY.use("io,node,json", function(S, Io, Node, Json){
+                var getData = function(){
+                    var name = Node.one("#name").val();
+                    var areaId = Node.one("#areaId").val();
+                    var data = {name:name, areaId:areaId};
+                    return data;
+                };
+
+                var getCond = function(){
+                    var id = Node.one("#code").val();
+                    return {id:id};
+                };
+
+                var checkParam = function(data){
+                    if(data.name.length == 0)
+                    {
+                        alert("请输入名称");
+                        return false;
+                    }
+                    return true;
+                };
+
+
+                Node.one("#modify").on("click", function(){
+                    var data = getData();
+                    if(checkParam(data))
+                    {
+                        var bodyNode = {data:{$set:data}, cond:getCond()};
+                        CurSite.sendDigest(Io, Json, "AD04", null, bodyNode, function(err, backBodyNode){
+                            alert(backBodyNode.description);
+                        });
+                    }
+                });
+            });
+    body
+        input(id="code", type="hidden" value=league.id)
+        .bodyAdminDiv
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 代码*:
+                .vs_grid_plain(style="margin-left:8px;")=league.id
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 名称*:
+                .vs_grid_plain(style="margin-left:8px;")
+                    input(id="name", type="text" value=league.name)
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 区域*:
+                .vs_grid_plain(style="margin-left:8px;")
+                    select(id="areaId")
+                        option(value="") 无
+                        - each val in rst
+                            if(val.id == league.areaId)
+                                option(value=val.id, selected="true")=val.name
+                            else
+                                option(value=val.id)=val.name
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;") &nbsp;
+                .vs_grid_plain(style="margin-left:8px;")
+                    input(type="button", value="修改", id="modify")

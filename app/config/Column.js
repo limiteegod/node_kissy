@@ -1,5 +1,8 @@
-var Column = function(name, type, length, nullable, default_value, primary, auto_increment){
+var log = require('../util/McpLog.js');
+
+var Column = function(db, name, type, length, nullable, default_value, primary, auto_increment){
     var self = this;
+    self.db = db;
     self.name = name;
     self.type = type;
     self.length = length;
@@ -69,34 +72,49 @@ Column.prototype.isAuto_increment = function()
     return self.auto_increment;
 };
 
+Column.prototype.traverse = function()
+{
+    var self = this;
+    var sql = self.toString();
+    log.info(sql);
+};
+
 /**
  * 转换成创建列时的字符串
  */
 Column.prototype.toString = function()
 {
     var self = this;
-    var sql = self.name + " " + self.type;
-    if(self.type != 'date' && self.type != 'bigint')
+    if(self.type == 'UNIQUE')
     {
-        sql += "(" + self.length + ")";
+        var sql = 'CONSTRAINT ' + self.name + " " + self.type + "(" + self.default_value + ")";
+        return sql;
     }
-    if(!self.nullable)
+    else
     {
-        sql += " not null";
+        var sql = self.name + " " + self.type;
+        if(self.type != 'date' && self.type != 'bigint' && self.type != 'datetime' && self.type != 'date')
+        {
+            sql += "(" + self.length + ")";
+        }
+        if(!self.nullable)
+        {
+            sql += " not null";
+        }
+        if(self.default_value != undefined)
+        {
+            sql += " default '" + self.default_value + "'";
+        }
+        if(self.primary)
+        {
+            sql += " primary key";
+        }
+        if(self.auto_increment)
+        {
+            sql += " auto_increment";
+        }
+        return sql;
     }
-    if(self.default_value != undefined)
-    {
-        sql += " default '" + self.default_value + "'";
-    }
-    if(self.primary)
-    {
-        sql += " primary key";
-    }
-    if(self.auto_increment)
-    {
-        sql += " auto_increment";
-    }
-    return sql;
 };
 
 module.exports = Column;

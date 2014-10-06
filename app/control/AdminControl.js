@@ -1,37 +1,110 @@
 var async = require('async');
-
-var db = require('../config/Database.js');
-var errCode = require('../config/ErrCode.js');
+var log = require('../util/McpLog.js');
+var digestUtil = require("../util/DigestUtil.js");
+var dc = require('../config/DbCenter.js');
+var ec = require('../config/ErrCode.js');
 var prop = require('../config/Prop.js');
-var loginControl = require('./LoginControl.js');
+var pageUtil = require("../util/PageUtil.js");
+var digestService = require('../service/DigestService.js');
 
-var AdminControl = function(){};
+var AdminControl = function(){
+    var self = this;
+    self.cmd = {'AD01':0, 'AD02':1, 'AD03':2, 'AD04':3};
+    self.cmdArray = [{id:0, code:'AD01', fromType:prop.digestFromType.CACHE, des:"权限查询"},
+        {id:1, code:'AD02', fromType:prop.digestFromType.CACHE, des:'添加地域'},
+        {id:2, code:'AD03', fromType:prop.digestFromType.CACHE, des:'添加联赛'},
+        {id:3, code:'AD04', fromType:prop.digestFromType.CACHE, des:'修改联赛'}];
+};
 
 AdminControl.prototype.handle = function(headNode, bodyStr, userCb)
 {
     var self = this;
     async.waterfall([
-        //check login state
-        function(cb){
-            loginControl.check(headNode, bodyStr, function(errCode, user, headNode, bodyNode){
-                if(errCode)
-                {
-                    userCb(errCode);
-                }
-                else
-                {
-                    cb(null, user, headNode, bodyNode);
-                }
+        //是否是支持的cmd
+        function(cb)
+        {
+            var cmd = self.cmd[headNode.cmd];
+            if(cmd == undefined)
+            {
+                cb(ec.E9000);
+            }
+            else
+            {
+                cb(null);
+            }
+        },
+        //校验头的用户类型是否合法
+        function(cb)
+        {
+            var userTypeId = prop.userType[headNode.userType];
+            if(userTypeId == undefined)
+            {
+                cb(ec.E9005);
+            }
+            else
+            {
+                cb(null);
+            }
+        },
+        //获得密钥
+        function(cb)
+        {
+            var cmd = self.cmdArray[self.cmd[headNode.cmd]];
+            digestService.getKey({fromType:cmd.fromType, userId:headNode.userId}, function(err, key){
+                headNode.key = key;
+                cb(err, key);
             });
         },
-        //check body
-        function(user, headNode, bodyNode, cb){
+        //先解密
+        function(key, cb)
+        {
+            log.info(key);
+            var decodedBodyStr = digestUtil.check(headNode, key, bodyStr);
+            try {
+                var bodyNode = JSON.parse(decodedBodyStr);
+                cb(null, bodyNode);
+            }
+            catch (err)
+            {
+                cb(ec.E9003);
+            }
+        },
+        //check the param
+        function(bodyNode, cb){
+            var method = 'check' + headNode.cmd;
+            self[method](null, headNode, bodyNode, function(err){
+                cb(err, bodyNode);
+            });
+        },
+        //业务处理
+        function(bodyNode, cb){
             var cmd = 'handle' + headNode.cmd;
-            self[cmd](user, headNode, bodyNode, cb);
+            self[cmd](null, headNode, bodyNode, cb);
         }
-    ], function (err, backBodyNode) {
-        userCb(err, backBodyNode);
+    ], function (err, bodyNode) {
+        userCb(err, bodyNode);
     });
+};
+
+
+AdminControl.prototype.checkAD01 = function(user, headNode, bodyNode, cb)
+{
+    cb(null);
+};
+
+AdminControl.prototype.checkAD02 = function(user, headNode, bodyNode, cb)
+{
+    cb(null);
+};
+
+AdminControl.prototype.checkAD03 = function(user, headNode, bodyNode, cb)
+{
+    cb(null);
+};
+
+AdminControl.prototype.checkAD04 = function(user, headNode, bodyNode, cb)
+{
+    cb(null);
 };
 
 /**
@@ -49,28 +122,18 @@ AdminControl.prototype.handleAD01 = function(user, headNode, bodyNode, cb)
     {
         cond = {};
     }
-    cond.userTypeId = user.userTypeId;
-    var userOperationTable = db.get("userOperation");
-    var operationTable = db.get("operation");
-    userOperationTable.find(cond, {userTypeId:1, operationId:1}).toArray(function(err, data){
-        async.each(data, function(row, callback) {
-            operationTable.find({_id:row.operationId}, {name:1, url:1, parentId:1}).toArray(function(err, data){
-                row.operation = data[0];
-                callback(err);
-            });
-        }, function(err){
-            if(err) {
-                cb(errCode.E9999);
-            } else {
-                backBodyNode.rst = data;
-                cb(null, backBodyNode);
-            }
-        });
+    var operationTable = dc.main.get("operation");
+    operationTable.find(cond, {}).toArray(function(err, data){
+        if(data)
+        {
+            backBodyNode.rst = data;
+        }
+        cb(null, backBodyNode);
     });
 };
 
 /**
- * find operation by condition
+ * save area
  * @param user
  * @param headNode
  * @param bodyNode
@@ -79,15 +142,54 @@ AdminControl.prototype.handleAD01 = function(user, headNode, bodyNode, cb)
 AdminControl.prototype.handleAD02 = function(user, headNode, bodyNode, cb)
 {
     var backBodyNode = {};
-    var cond = bodyNode.cond;
-    if(cond == undefined)
-    {
-        cond = {};
-    }
-    var operationTable = db.get("operation");
-    operationTable.find(cond, {name:1, url:1, parentId:1, hasChildren:1}).toArray(function(err, data){
-        backBodyNode.rst = data;
-        cb(err, backBodyNode);
+    var areaTable = dc.main.get("area");
+    areaTable.save(bodyNode.league, [], function(err, data){
+        if(err)
+        {
+            cb(ec.E9999);
+        }
+        else
+        {
+            cb(err, backBodyNode);
+        }
+    });
+};
+
+/**
+ * save area
+ * @param user
+ * @param headNode
+ * @param bodyNode
+ * @param cb
+ */
+AdminControl.prototype.handleAD03 = function(user, headNode, bodyNode, cb)
+{
+    var backBodyNode = {};
+    var leagueTable = dc.main.get("league");
+    leagueTable.save(bodyNode.league, [], function(err, data){
+        if(err)
+        {
+            cb(ec.E9999);
+        }
+        else
+        {
+            cb(err, backBodyNode);
+        }
+    });
+};
+
+/**
+ * @param user
+ * @param headNode
+ * @param bodyNode
+ * @param cb
+ */
+AdminControl.prototype.handleAD04 = function(user, headNode, bodyNode, cb)
+{
+    var backBodyNode = {};
+    var leagueTable = dc.main.get("league");
+    leagueTable.update(bodyNode.cond, bodyNode.data, [], function(err, data){
+        cb(null, backBodyNode);
     });
 };
 

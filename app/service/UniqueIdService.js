@@ -1,5 +1,4 @@
-var db = require('../config/Database.js');
-var table = db.get("uniqueId");
+var dc = require('../config/DbCenter.js');
 
 var UniqueIdService = function(){};
 
@@ -9,7 +8,8 @@ var UniqueIdService = function(){};
  */
 UniqueIdService.prototype.exists = function(uniqueId, cb)
 {
-    table.save({_id:uniqueId}, function(err, data){
+    var table = dc.mg.get("uniqueId");
+    table.save({_id:uniqueId}, [], function(err, data){
         cb(err, data);
     });
 };

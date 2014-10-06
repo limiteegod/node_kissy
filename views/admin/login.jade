@@ -7,42 +7,37 @@ html(lang="en")
                 Node.one("#submit").on("click", function(){
                     var name = Node.one("#name").val();
                     var pwd = Node.one("#pwd").val();
-                    //3des
                     var key = hex_md5(pwd);
-                    var headNode = {cmd:"A01", digest:null, digestType:"3des", userId:name, userType:"manager"};
+                    CurSite.setCookie("userId", name, CurSite.cookieExpireTime);
+                    CurSite.setCookie("userType", "ADMIN", CurSite.cookieExpireTime);
                     var body = {name:name, password:pwd, uniqueId:CurSite.createUUID()};
-                    var msgNode = CurSite.encrypt(headNode, key, Json.stringify(body));
-                    Io({type:"post", url:CurSite.interPath, data:{message:Json.stringify(msgNode)}, success:function(data){
-                            var backBodyStr = data.body;
-                            var decodedBodyStr = CurSite.decrypt(data.head, key, backBodyStr);
-                            var backBodyNode = Json.parse(decodedBodyStr);
-                            if(backBodyNode.code == '0000')
-                            {
-                                CurSite.setCookie("userId", name, 30*60);
-                                CurSite.setCookie("userType", "manager", 30*60);
-                                CurSite.setCookie("st", backBodyNode.st, 30*60);
-                                window.location = CurSite.getAbsolutePath("admin_index.html");
-                            }
-                            else
-                            {
-                                alert(backBodyNode.description);
-                            }
-                    }});
+                    CurSite.sendDigest(Io, Json, "A01", key, body, function(err, backBodyNode){
+                        if(backBodyNode.repCode == '0000')
+                        {
+                            CurSite.setCookie("st", backBodyNode.st, CurSite.cookieExpireTime);
+                            window.location = CurSite.getAbsolutePath("admin_index.html");
+                        }
+                        else
+                        {
+                            alert(backBodyNode.description);
+                        }
+                    });
                 });
             });
     body
-        h1 Jade - node template engine
-        #container.container
-            table
-                tr
-                    td.
-                       name:
-                    td
-                        input(type='text', id='name')
-                tr
-                    td.
-                       password:
-                    td
-                        input(type='password', id='pwd')
-        #controlButton.container
-            input(id='submit', type="button", value='submit')
+        .bodyDiv
+            h1 Jade - node template engine
+            #container.container
+                table
+                    tr
+                        td.
+                           name:
+                        td
+                            input(type='text', id='name')
+                    tr
+                        td.
+                           password:
+                        td
+                            input(type='password', id='pwd')
+            #controlButton.container
+                input(id='submit', type="button", value='submit')

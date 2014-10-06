@@ -35,8 +35,11 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
         model: {
             value:true
         },
-        sureEvent:{
-            value:undefined
+        controlBt:{
+            value:[{name:'确定', cb:null}, {name:'取消', cb:null}, {name:'关闭', cb:null}]
+        },
+        html: {
+            value:''
         }
     };
 
@@ -47,10 +50,10 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             var wId = CurSite.createUUID();
             var body = Node.one("body");
             var bodyWidth = document.body.clientWidth;
-            var bodyHeight = document.body.clientHeight;
+            var bodyHeight = window.innerHeight;
             var left = (bodyWidth - self.get("width"))/2;
             var top = (bodyHeight - self.get("height"))/2;
-            var html = self.container.html();
+            var html = self.get("html");
             self.container.html("");
             self.widowDiv = Node.one('<div class="vs_div_talbe_border" style="position: absolute;left:' + left + 'px;top:' + top + 'px;width:' + self.get("width") + 'px"></div>');
             self.widowDiv.append('<div class="clearfix"><div class="vs_div_table_border_head_left"></div><div class="vs_div_table_border_head"></div><div class="vs_div_table_border_head_right"></div></div>');
@@ -66,45 +69,59 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             });
             var cWidth = self.get("width") - 10;
             var cHeight = self.get("height") - 10;
-            var cTable = Node.one('<div style="overflow-x: hidden;position:absolute;left:5px;top:30px;width:' + cWidth + 'px;height:' + (cHeight - 25) + 'px;"></div>');
-            var title = Node.one('<div style="overflow-x: hidden;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
-            var frame = Node.one('<iframe id="' + wId + '" frameborder="no" border="0" style="width:' + cWidth + 'px;height:' + (cHeight - 25) + 'px;"></iframe>');
-            var bottomField = Node.one('<div style="overflow-x: hidden;border-top:1px solid #28afae;left:5px;top:' + (cHeight - 28) + 'px;position:absolute;width:' + cWidth + 'px;height:26px;"></div>');
-            var sureButton = Node.one('<input type="button" value="确定" style="margin-left:' + (cWidth - 100) + 'px"/>');
-            var cancelButton = Node.one('<input type="button" value="取消"/>');
-            bottomField.append(sureButton);
-            bottomField.append(cancelButton);
-            frame.attr("src", CurSite.getAbsolutePath(self.get("url")) + "?frameId=" + wId);
-            cTable.append(frame);
+            var cTable = Node.one('<div style="overflow-x: hidden;position:absolute;left:5px;top:26px;width:' + cWidth + 'px;height:' + (cHeight - 25 - 32) + 'px;"></div>');
+            var title = Node.one('<div style="overflow-x: hidden;text-align:left;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
+            var bottomField = Node.one('<div style="overflow-x: hidden;border-top:1px solid #28afae;left:5px;top:' + (cHeight - 30) + 'px;position:absolute;width:' + cWidth + 'px;height:28px;"></div>');
+            if(html.length == 0)
+            {
+                var frame = Node.one('<iframe id="' + wId + '" frameborder="no" border="0" style="width:' + cWidth + 'px;height:' + (cHeight - 25) + 'px;"></iframe>');
+                frame.attr("src", CurSite.getAbsolutePath(self.get("url")) + "&frameId=" + wId);
+                cTable.append(frame);
+            }
+            else
+            {
+                cTable.append(html);
+            }
             self.widowDiv.append(title);
             self.widowDiv.append(cTable);
             self.widowDiv.append(bottomField);
 
             self.cTable = cTable;
 
-            sureButton.on("click", function(){  //点击了确定按钮
-                var sureEvent = self.get("sureEvent");
-                if(sureEvent != undefined)
+            var bts = self.get("controlBt");
+            var btsWidth = 68*bts.length;
+            for(var key in bts)
+            {
+                var bt = bts[key];
+                var btMarginLeft
+                if(key == 0)
                 {
-                    var cDoc = window.frames[wId].contentDocument;
-                    if(cDoc == undefined)
-                    {
-                        cDoc = window.frames[wId].document;
-                    }
-                    var backValueElement = cDoc.getElementById("backValue");
-                    var backValueKissyNode = Node.one(backValueElement);
-                    sureEvent(Json.parse(backValueKissyNode.val()));
+                    btMarginLeft = cWidth - btsWidth + 60*key;
                 }
-                self.close();
-            });
-
-            cancelButton.on("click", function(){
-                self.close();
-            });
-
+                else
+                {
+                    btMarginLeft = 10;
+                }
+                var btNode = Node.one('<input index="' + key + '" type="button" value="' + bt.name + '" style="width:50px;margin-left:' + btMarginLeft + 'px"/>');
+                bottomField.append(btNode);
+                self._bindBtEvent(btNode);
+            }
             self.backDiv = Node.one('<div class="div_window_back" style="position: absolute;;left:0px;top:0px;width:' + bodyWidth + 'px;height:' + bodyHeight + 'px"></div>');
             body.append(self.backDiv);
             body.append(self.widowDiv);
+        },
+        _bindBtEvent:function(btNode)
+        {
+            var self = this;
+            btNode.on("click", function(){
+                var index = parseInt(Node.one(this).attr("index"));
+                var cb = self.get("controlBt")[index].cb;
+                if(cb)
+                {
+                    cb();
+                }
+                self.close();
+            });
         },
         setHtml:function(html)
         {

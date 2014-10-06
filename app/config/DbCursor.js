@@ -1,10 +1,22 @@
 var dbPool = require('./DbPool.js');
+var dateUtil = require('../util/DateUtil.js');
+var log = require('../util/McpLog.js');
 
-var DbCurser = function(baseSql){
+var DbCurser = function(table, options, baseSql, conditionStr){
     var self = this;
+    self.table = table;
     self.baseSql = baseSql;
+    self.conditionStr = conditionStr;
+    self.options = options;
 };
 
+DbCurser.prototype.limit = function(start, size)
+{
+    var self = this;
+    var sql = " limit " + start + "," + size;
+    self.baseSql += sql;
+    return self;
+};
 
 DbCurser.prototype.sort = function(data)
 {
@@ -31,17 +43,43 @@ DbCurser.prototype.sort = function(data)
     {
         self.baseSql += sql;
     }
+    return self;
 };
 
 DbCurser.prototype.toArray = function(cb)
 {
     var self = this;
-    console.log(self.baseSql);
-    dbPool.conn.query(self.baseSql, function(err, rows, fields) {
-        if (err) throw err;
-        if(cb != undefined)
+    var sql = self.baseSql;
+    if(self.conditionStr)
+    {
+        sql += " where " + self.conditionStr;
+    }
+    log.info(sql);
+    var conn = self.table.db.pool.getConn();
+    conn.execute(sql, self.options, function(err, data){
+        log.info(data);
+        cb(err, data);
+    });
+};
+
+DbCurser.prototype.count = function(cb)
+{
+    var self = this;
+    var sql = "select count(*) as num from " + self.table.name;
+    if(self.conditionStr)
+    {
+        sql += " where " + self.conditionStr;
+    }
+    log.info(sql);
+    var conn = self.table.db.pool.getConn();
+    conn.execute(sql, self.options, function(err, data){
+        if(data && data.length > 0)
         {
-            cb(err, rows);
+            cb(null, data[0].num);
+        }
+        else
+        {
+            cb(err, data);
         }
     });
 };

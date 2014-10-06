@@ -10,7 +10,7 @@ CurSite.conextPath = CurSite.getContextPath();
 CurSite.getAbsolutePath = function(url) {
     return CurSite.site + CurSite.conextPath + "/" + url;
 };
-CurSite.interPath = CurSite.getAbsolutePath("main/interface.htm");
+CurSite.interPath = CurSite.getAbsolutePath("mcp-filter/main/interface.htm");
 CurSite.createUUID = function() {
     var s = [];
     var hexDigits = "0123456789abcdef";
@@ -171,4 +171,46 @@ CurSite.decrypt = function(headNode, key, encodedBodyStr)
     var iv  = CryptoJS.enc.Base64.parse(CurSite.getDefaultIv());
     var decrypted = CryptoJS.TripleDES.decrypt(encodedBodyStr, arrayKey, {iv:iv, mode:CryptoJS.mode.CFB, padding: CryptoJS.pad.NoPadding});
     return decrypted.toString(CryptoJS.enc.Utf8);
+};
+
+//one year
+CurSite.cookieExpireTime = 365*24*60*60;
+
+//send undigest msg to server
+CurSite.sendUnDigest = function(Io, Json, cmd, bodyNode, cb)
+{
+    var headNode = {cmd:cmd, digestType:"3des-empty"};
+    var msgNode = CurSite.encrypt(headNode, null, Json.stringify(bodyNode));
+    Io({type:"post", url:CurSite.interPath, data:{message:Json.stringify(msgNode)}, success:function(data){
+        var backBodyStr = data.body;
+        var decodedBodyStr = CurSite.decrypt(data.head, null, backBodyStr);
+        var backBodyNode = Json.parse(decodedBodyStr);
+        cb(null, backBodyNode);
+    }});
+};
+
+//send digest msg to server
+CurSite.sendDigest = function(Io, Json, cmd, key, bodyNode, cb)
+{
+    var self = this;
+    var cookies = self.getCookie();
+    if(!key)
+    {
+        var key = cookies["st"];
+    }
+    var headNode = {cmd:cmd, digestType:"3des", userId:cookies["userId"], userType:cookies["userType"]};
+    var msgNode = CurSite.encrypt(headNode, key, Json.stringify(bodyNode));
+    Io({type:"post", url:CurSite.interPath, data:{message:Json.stringify(msgNode)}, success:function(data){
+        var backBodyStr = data.body;
+        var decodedBodyStr = CurSite.decrypt(data.head, key, backBodyStr);
+        var backBodyNode = Json.parse(decodedBodyStr);
+        if(backBodyNode.repCode == '9004')
+        {
+            CurSite.redirectTo(null, "admin_login.html");
+        }
+        else
+        {
+            cb(null, backBodyNode);
+        }
+    }});
 };

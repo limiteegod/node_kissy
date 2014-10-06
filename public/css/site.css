@@ -1,5 +1,20 @@
 @CHARSET "UTF-8";
 
+body {
+    text-align:center;
+    font-size:14px;
+}
+
+.bodyDiv {
+    margin:0 auto;width:960px;
+    text-align: left;
+}
+
+.bodyAdminDiv {
+    margin:0 auto;width:100%;
+    text-align: left;
+}
+
 .leftItem {
     cursor: pointer;
 }
@@ -7,6 +22,32 @@
 .vs_div_talbe {
     padding: 0px;
     position: relative;
+}
+
+.vs_grid_plain {
+    position: relative;
+    left: 0px;
+    top: 0px;
+    padding: 0px;
+    overflow: hidden;
+    float:left;
+}
+
+.vs_page_index_unselected {
+    overflow: hidden;
+    float:left;
+    cursor:pointer;
+    text-decoration: underline;
+    margin-left: 6px;
+}
+
+.vs_page_index_selected {
+    overflow: hidden;
+    float:left;
+    cursor:pointer;
+    color: red;
+    text-decoration: underline;
+    margin-left: 6px;
 }
 
 .vs_div_talbe_border {
@@ -111,6 +152,8 @@
     overflow: hidden;
     float:left;
     cursor:pointer;
+    padding-left: 2px;
+    padding-top: 2px;
 }
 
 .vs_div_table_content_right {
@@ -118,6 +161,8 @@
     overflow: hidden;
     float:left;
     cursor:pointer;
+    padding-left: 2px;
+    padding-top: 2px;
 }
 
 .vs_div_table_content_bottom {
@@ -126,6 +171,8 @@
     overflow: hidden;
     float:left;
     cursor:pointer;
+    padding-left: 2px;
+    padding-top: 2px;
 }
 
 .vs_div_table_content_bottom_right {
@@ -133,6 +180,8 @@
     overflow: hidden;
     float:left;
     cursor:pointer;
+    padding-left: 2px;
+    padding-top: 2px;
 }
 
 .container {

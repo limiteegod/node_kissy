@@ -1,0 +1,59 @@
+doctype html
+html(lang="en")
+    head
+        include ../includes/script.jade
+        script(type='text/javascript').
+            KISSY.use("io,node,json", function(S, Io, Node, Json){
+                var getData = function(){
+                    var id = Node.one("#code").val();
+                    var name = Node.one("#name").val();
+                    var areaId = Node.one("#areaId").val();
+                    var data = {id:id, name:name, areaId:areaId};
+                    return data;
+                };
+
+                var checkParam = function(data){
+                    if(data.id.length == 0)
+                    {
+                        alert("请输入代码");
+                        return false;
+                    }
+                    if(data.name.length == 0)
+                    {
+                        alert("请输入名称");
+                        return false;
+                    }
+                    return true;
+                };
+
+                Node.one("#success").on("click", function(){
+                    var data = getData();
+                    if(checkParam(data))
+                    {
+                        var bodyNode = {league:data};
+                        CurSite.sendDigest(Io, Json, "AD03", null, bodyNode, function(err, backBodyNode){
+                            alert(backBodyNode.description);
+                        });
+                    }
+                });
+            });
+    body
+        .bodyAdminDiv
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 代码*:
+                .vs_grid_plain(style="margin-left:8px;")
+                    input(id="code", type="text")
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 名称*:
+                .vs_grid_plain(style="margin-left:8px;")
+                    input(id="name", type="text")
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;margin-top:4px") 区域*:
+                .vs_grid_plain(style="margin-left:8px;")
+                    select(id="areaId")
+                        - each val in rst
+                            option(value=val.id)=val.name
+            .clearfix(style="margin-top:8px")
+                .vs_grid_plain(style="width:100px;text-align:right;") &nbsp;
+                .vs_grid_plain(style="margin-left:8px;")
+                    input(type="button", value="添加", id="success")

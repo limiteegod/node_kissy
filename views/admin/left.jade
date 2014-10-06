@@ -4,9 +4,37 @@ html(lang="en")
         include ../includes/script.jade
         link(rel='stylesheet', type='text/css', href='./js/tree/assets/dpl-min.css')
         script(type='text/javascript').
-            KISSY.use("io,node,json,tree", function(S, Io, Node, Json, Tree){
+            KISSY.use("io,node,json,vs-data-tree", function(S, Io, Node, Json, VsDataTree){
+                var getChildren = function(id, cb)
+                {
+                    var bodyNode = {cond:{parent:id}};
+                    CurSite.sendDigest(Io, Json, "AD01", null, bodyNode, function(err, backBodyNode){
+                        cb(err, backBodyNode.rst);
+                    });
+                };
 
-                var tree = new Tree({
+                var selectionChange = function(src, target)
+                {
+                    if(target.url.length > 0)
+                    {
+                        parent.document.getElementById("mainFrame").src = target.url + "?frameId=mainFrame";
+                    }
+                };
+
+                var bodyNode = {cond:{parent:''}};
+                CurSite.sendDigest(Io, Json, "AD01", null, bodyNode, function(err, backBodyNode){
+                    if(backBodyNode.repCode == '0000')
+                    {
+                        var tree = new VsDataTree("#ppList", {data:backBodyNode.rst, getChildren:getChildren,
+                        selectionChange:selectionChange
+                        });
+                    }
+                    else
+                    {
+                        alert(backBodyNode.description);
+                    }
+                });
+                /*var tree = new Tree({
                     content : "权限管理",
                     expanded : true,
                     showRootNode:false,
@@ -60,7 +88,8 @@ html(lang="en")
                         {
                             alert(backBodyNode.description);
                         }
-                }});
+                }});*/
             });
     body
-        #treeContainer(style="width: 160px;font-size:14px;")
+        .bodyAdminDiv
+            #ppList.container
