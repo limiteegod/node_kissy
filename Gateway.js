@@ -3,11 +3,7 @@ var http = require('http');
 var async = require('async');
 var httpServer = http.createServer(app);
 var prop = require('./app/config/Prop.js');
-var errCode = require('./app/config/ErrCode.js');
-var digestUtil = require("./app/util/DigestUtil.js");
 var log = require("./app/util/McpLog.js");
-var cmdFactory = require("./app/control/CmdFactory.js");
-var dc = require('./app/config/DbCenter.js');
 var pageControl = require("./app/control/PageControl.js");
 
 var Gateway = function(){
@@ -17,13 +13,6 @@ var Gateway = function(){
 Gateway.prototype.start = function(){
     var self = this;
     async.waterfall([
-        //connect db
-        function(cb)
-        {
-            dc.init(function(err){
-                cb(err);
-            });
-        },
         //start web
         function(cb)
         {
@@ -92,66 +81,7 @@ Gateway.prototype.startWeb = function()
         }
     });
 
-    app.post("/mcp-filter/main/interface.htm", function(req, res){
-        var message = req.body.message;
-        self.handle(message, function(backMsgNode){
-            res.json(backMsgNode);
-            log.info(backMsgNode);
-        });
-    });
-
-    app.get("/mcp-filter/main/interface.htm", function(req, res){
-        var message = req.query.message;
-        self.handle(message, function(backMsgNode){
-            res.json(backMsgNode);
-            log.info(backMsgNode);
-        });
-    });
-
-    httpServer.listen(9083);
-};
-
-Gateway.prototype.handle = function(message, cb)
-{
-    var self = this;
-    log.info(message);
-    try {
-        var msgNode = JSON.parse(message);
-        var headNode = msgNode.head;
-        var bodyStr = msgNode.body;
-        cmdFactory.handle(headNode, bodyStr, function(err, bodyNode) {
-            var key = headNode.key;
-            headNode.key = undefined;
-            if(key == undefined)
-            {
-                key = digestUtil.getEmptyKey();
-                if(headNode.digestType == '3des')
-                {
-                    headNode.digestType = "3des-empty";
-                }
-            }
-            if (bodyNode == undefined) {
-                bodyNode = {};
-            }
-            if (err) {
-                bodyNode.repCode = err.repCode;
-                bodyNode.description = err.description;
-            }
-            else
-            {
-                bodyNode.repCode = errCode.E0000.repCode;
-                bodyNode.description = errCode.E0000.description;
-            }
-            log.info(bodyNode);
-            var decodedBodyStr = digestUtil.generate(headNode, key, JSON.stringify(bodyNode));
-            cb({head: headNode, body: decodedBodyStr});
-        });
-    }
-    catch (err)
-    {
-        cb({head:{cmd:'E01'}, body:JSON.stringify(errCode.E2058)});
-        return;
-    }
+    httpServer.listen(9084);
 };
 
 var gateway = new Gateway();

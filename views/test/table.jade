@@ -1,0 +1,27 @@
+doctype html
+html(lang="en")
+    head
+        include ../includes/script.jade
+        script(type='text/javascript').
+            KISSY.use("io,node,json,vs-grid-table,vs-pagebar,vs-round-input,vs-window",
+                function(S, Io, Node, Json, VsGridTable, VsPagebar, VsRoundInput, VsWindow){
+                var table = new VsGridTable('#areas', {});
+            });
+    body
+        .bodyAdminDiv
+            .clearfix(style="margin-top:8px")
+                #areas.container(style="width:823px;")
+                    table
+                        thead
+                            tr
+                                td(style="width:276px;") 编码
+                                td(style="width:200px;") 名称
+                                td(style="width:200px;") 所属地区
+                                td(style="width:134px;") 操作
+                        tbody
+                            tr
+                                td code
+                                td name
+                                td china
+                                td
+                                    input(type="button", value="详情", class="detail")
