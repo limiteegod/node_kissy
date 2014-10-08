@@ -45,10 +45,9 @@ KISSY.add("vs-list", ["./node", "./base"], function(S, require) {
             var data = [];
             var domList = self.container.one("ol");
             domList.all("li").each(function(li){
-                data[data.length] = {_id:li.attr("value"), name:li.html()};
+                data[data.length] = {id:li.attr("value"), name:li.html()};
             });
             self.set("data", data);
-            console.log(data);
 
             self.container.html("");
             for(var key in data)
@@ -90,7 +89,6 @@ KISSY.add("vs-list", ["./node", "./base"], function(S, require) {
             var self = this;
             //绑定事件
             self.container.children("div").each(function(item){
-                console.log(item);
                 item.on("click", function(){
                     var curNode = Node.one(this);
                     var clickRow = parseInt(curNode.attr("row"));
@@ -132,7 +130,7 @@ KISSY.add("vs-list", ["./node", "./base"], function(S, require) {
             var data = self.get("data");
             for(var key in data)
             {
-                if(data[key]._id == id)
+                if(data[key].id == id)
                 {
                     self.setSelected(key);
                     break;

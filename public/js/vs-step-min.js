@@ -23,6 +23,9 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
         title:{
             value:''
         },
+        frameId:{
+            value:''
+        },
         pages:{
             value:new Array()
         },
@@ -48,7 +51,9 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
             var self = this;
             var title = "第" + self.get("step") + "步，共" + self.get("pages").length + "步";
             var step = parseInt(self.get("step") - 1);
-            var url = self.get("pages")[step];
+            var pageArray = self.get("pages");
+            self.set("checking", false);
+            self.set("stepCount", pageArray.length);
             self.wId = CurSite.createUUID();
             var body = self.container;
             var bodyWidth = self.container.width();
@@ -111,9 +116,10 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
             self.cancelButton.on("click", function(){
                 self.toNextPage();
             });
+
             body.append(self.widowDiv);
 
-            self.toPage(0);
+            self.toPage(1);
         },
         setHtml:function(html)
         {
@@ -130,9 +136,8 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
         {
             var self = this;
             var step = self.get("step");
-            console.log("step..........." + step);
             //first step, disable the last step button
-            if(step == 0)
+            if(step == 1)
             {
                 self.sureButton.attr("disabled", true);
             }
@@ -141,7 +146,7 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
                 self.sureButton.removeAttr("disabled");
             }
             //the end, disable the next button
-            if(step == self.get("pages").length - 1)
+            if(step == self.get("pages").length)
             {
                 self.cancelButton.attr("disabled", true);
             }
@@ -160,35 +165,62 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
                 self.titleNode.html(title.innerHTML);
             }
         },
-        toPage:function(index)
+        checkSuccess:function(data)
         {
             var self = this;
-            var step = self.get("step");
-            if(step > -1)
+            self.set("checking", false);
+            if(data)
             {
+                var wData = self.get("data");
+                wData[self.get("step") - 1] = data;
+                console.log(wData);
+                self.toPageNoCheck(self.get("targetPage"));
+            }
+        },
+        toPageNoCheck:function(step)
+        {
+            var self = this;
+            if(step > 0)
+            {
+                self.set("step", step);
+                var data = self.get("data");
+                var url = self.get("pages")[step - 1];
+                var encodedBody = CurSite.encrypt({digestType:"3des-empty"}, null, Json.stringify(data)).body;
+                self.frame.attr("src", url + "?data=" + encodeURIComponent(encodedBody) + "&frameId=" + self.wId + "&parentFrameId=" + self.get("frameId"));
+                self.setTitle();
+                self.resetStepButton();
+            }
+        },
+        toPage:function(step)
+        {
+            var self = this;
+            if(self.get("checking"))
+            {
+                return;
+            }
+            self.set("checking", true);
+            var lastStep = self.get("step");
+            if(lastStep > 0)
+            {
+                self.set("targetPage", step);
                 //get step data from page
                 var cDoc = CurSite.getFrameDocById(self.wId);
                 var backValueElement = cDoc.getElementById("backValue");
                 var backValueKissyNode = Node.one(backValueElement);
                 backValueKissyNode.fire("click");
-                self.get("data")[step] = Json.parse(CurSite.decrypt({digestType:"3des-empty"}, null, backValueKissyNode.val()));
             }
-            console.log(step);
-            self.set("step", index);
-            var url = self.get("pages")[index];
-            var data = self.get("data");
-            var encodedBody = CurSite.encrypt({digestType:"3des-empty"}, null, Json.stringify(data)).body;
-            console.log(encodedBody);
-            self.frame.attr("src", url + "?data=" + encodeURIComponent(encodedBody));
-            self.setTitle();
-            self.resetStepButton();
-            //alert(dataStr);
+            else
+            {
+                self.toPageNoCheck(step);
+                self.set("checking", false);
+            }
         },
         toNextPage:function()
         {
             var self = this;
             var step = self.get("step");
-            if(step < self.get("pages").length - 1)
+            var stepCount = self.get("stepCount");
+            if(step < stepCount)
             {
                 self.toPage(step + 1);
             }
@@ -197,7 +229,8 @@ KISSY.add("vs-step", ["./node", "./base"], function(S, require) {
         {
             var self = this;
             var step = self.get("step");
-            if(step > 0)
+            var stepCount = self.get("stepCount");
+            if(step > 1)
             {
                 self.toPage(step - 1);
             }

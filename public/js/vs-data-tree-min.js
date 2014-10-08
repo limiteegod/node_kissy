@@ -42,9 +42,7 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
             var self = this;
             self.nodeDataList = {};
             self.set("width", self.container.width());
-            self.set("height", self.container.height());
-            self.container.html("");
-            var contentDiv = '<div style="position: absolute;left: 0px;top: 0px;padding: 0px;width: ' + self.get("width") + 'px;height:' + self.get("height") + 'px;"></div>';
+            var contentDiv = '<div style="width: ' + self.get("width") + 'px;"></div>';
             self.contentDiv = Node.one(contentDiv);
             self.container.append(self.contentDiv);
             var data = self.get("data");
