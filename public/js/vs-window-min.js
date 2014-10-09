@@ -118,9 +118,15 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
                 var cb = self.get("controlBt")[index].cb;
                 if(cb)
                 {
-                    cb();
+                    if(cb())
+                    {
+                        self.close();
+                    }
                 }
-                self.close();
+                else
+                {
+                    self.close();
+                }
             });
         },
         setHtml:function(html)

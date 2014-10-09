@@ -31,6 +31,11 @@ KISSY.add("vs-round-input", ["./node", "./base"], function(S, require) {
         _init:function()
         {
             var self = this;
+            var initValue = self.container.attr("initValue");
+            if(!initValue)
+            {
+                initValue = "";
+            }
             //self.container.html('<input type="text" style="width:172px;" value="请选择父级"/>');
             self.container.append('<div class="clearfix"><div class="vs_div_table_border_head_left"></div><div class="vs_div_table_border_head"></div><div class="vs_div_table_border_head_right"></div></div>');
             self.container.append('<div class="clearfix"><div class="vs_div_table_border_content_left"></div><div class="vs_div_table_border_content"></div><div class="vs_div_table_border_content_right"></div></div>');
@@ -68,7 +73,7 @@ KISSY.add("vs-round-input", ["./node", "./base"], function(S, require) {
             var cHeight = self.get("height") - 10;
             var cTable = Node.one('<div class="clearfix"></div>');
             var cTableContent = Node.one('<div style="overflow-x: hidden;padding:1px;position:absolute;left:8px;top:6px;width:' + cWidth + 'px;height:' + cHeight + 'px;"></div>');
-            self.cInput = Node.one('<input type="text" value="" style="width:' + (cWidth-2) + 'px;height:' + (cHeight-2) + 'px;border:none;outline:none;"/>');
+            self.cInput = Node.one('<input type="text" value="' + initValue + '" style="width:' + (cWidth-2) + 'px;height:' + (cHeight - 4) + 'px;border:none;outline:none;"/>');
             cTableContent.append(self.cInput);
             cTable.append(cTableContent);
             self.container.append(cTable);
