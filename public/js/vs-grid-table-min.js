@@ -44,7 +44,6 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
         {
             var self = this;
             var table = self.container.one("table");
-            self.set("width", self.container.width());
             var theadNode = table.one("thead");
             var theadTrNode = theadNode.one("tr");
             var tbodyNode = table.one("tbody");
@@ -68,7 +67,7 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
             var i = 0, j = 0;
             data[i] = new Array();
             theadTrNode.all("td").each(function(col){
-                widthArray[widthArray.length] = col.width();
+                widthArray[widthArray.length] = parseInt(col.attr("w"));
                 data[i][j] = col.html();
                 j++;
             });
@@ -93,11 +92,22 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                     j++;
                 });
             }
-            console.log(widthArray);
             self.set("data", data);
 
             var autoHeight = rowCount*self.get("rowHeight") + 10;
             self.set("height", autoHeight);
+            var cHeight = self.get("height") - 10;
+            var col = self.get("col");
+            var row = self.get("row");
+            var rowHeight = cHeight/row - 1 - 2;    //行的高度
+            var width = 0;  //计算父容器的宽度
+            for(var key in widthArray)
+            {
+                width += widthArray[key];
+            }
+            width += 10 + col*3;
+            self.container.width(width);
+            self.set("width", width);
 
             self.container.addClass("vs_div_talbe_border");
             self.container.append('<div class="clearfix"><div class="vs_div_table_border_head_left"></div><div class="vs_div_table_border_head"></div><div class="vs_div_table_border_head_right"></div></div>');
@@ -112,21 +122,15 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                 Node.one(item).css("height", self.get("height") - 40);
             });
             var cWidth = self.get("width") - 10;
-            var cHeight = self.get("height") - 10;
             var cTable = Node.one('<div style="overflow-x: hidden;padding:0px;position:absolute;left:5px;top:5px;width:' + cWidth + 'px;height:' + cHeight + 'px;"></div>');
-            var col = self.get("col");
-            var row = self.get("row");
-            var colWidth = cWidth/col - 1;
-            var rowHeight = cHeight/row - 1 - 2;
-
             //the table head
             var head = data[0];
             var rowStr = '<div class="clearfix">';
             for(var i = 0; i < col - 1; i++)
             {
-                rowStr += '<div row="0" col="' + i + '" class="vs_div_table_content" style="text-align:center;font-weight:bolder;width:' + colWidth + 'px;height:' + rowHeight + 'px;">' + head[i] + '</div>';
+                rowStr += '<div row="0" col="' + i + '" class="vs_div_table_content" style="text-align:center;font-weight:bolder;width:' + widthArray[i] + 'px;height:' + rowHeight + 'px;">' + head[i] + '</div>';
             }
-            rowStr += '<div row="0" col="' + (col - 1) + '" class="vs_div_table_content_right" style="text-align:center;font-weight:bolder;width:' + (colWidth + 1) + 'px;height:' + rowHeight + 'px;">' + head[col - 1] + '</div></div>';
+            rowStr += '<div row="0" col="' + (col - 1) + '" class="vs_div_table_content_right" style="text-align:center;font-weight:bolder;width:' + widthArray[col - 1] + 'px;height:' + rowHeight + 'px;">' + head[col - 1] + '</div></div>';
             cTable.append(rowStr);
 
             //the table content, except the bottom
@@ -135,9 +139,9 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                 var rowStr = '<div class="clearfix">';
                 for(var i = 0; i < col - 1; i++)
                 {
-                    rowStr += '<div row="' + j + '" col="' + i + '" class="vs_div_table_content" style="width:' + colWidth + 'px;height:' + rowHeight + 'px;">' + data[j][i] + '</div>';
+                    rowStr += '<div row="' + j + '" col="' + i + '" class="vs_div_table_content" style="width:' + widthArray[i] + 'px;height:' + rowHeight + 'px;">' + data[j][i] + '</div>';
                 }
-                rowStr += '<div row="' + j + '" col="' + (col - 1) + '" class="vs_div_table_content_right" style="width:' + (colWidth + 1) + 'px;height:' + rowHeight + 'px;">' + data[j][col - 1] + '</div></div>';
+                rowStr += '<div row="' + j + '" col="' + (col - 1) + '" class="vs_div_table_content_right" style="width:' + widthArray[col - 1] + 'px;height:' + rowHeight + 'px;">' + data[j][col - 1] + '</div></div>';
                 cTable.append(rowStr);
             }
 
@@ -147,9 +151,9 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                 var rowStr = '<div class="clearfix">';
                 for(var i = 0; i < col - 1; i++)
                 {
-                    rowStr += '<div row="' + (row - 1) + '" col="' + i + '" class="vs_div_table_content_bottom" style="width:' + colWidth + 'px;height:' + (rowHeight + 1) + 'px;">' + data[row-1][i] + '</div>';
+                    rowStr += '<div row="' + (row - 1) + '" col="' + i + '" class="vs_div_table_content_bottom" style="width:' + widthArray[i] + 'px;height:' + (rowHeight + 1) + 'px;">' + data[row-1][i] + '</div>';
                 }
-                rowStr += '<div row="' + (row - 1) + '" col="' + (col - 1) + '" class="vs_div_table_content_bottom_right" style="width:' + (colWidth + 1) + 'px;height:' + (rowHeight + 1) + 'px;">' + data[row-1][col-1] + '</div></div>';
+                rowStr += '<div row="' + (row - 1) + '" col="' + (col - 1) + '" class="vs_div_table_content_bottom_right" style="width:' + widthArray[col - 1] + 'px;height:' + (rowHeight + 1) + 'px;">' + data[row-1][col-1] + '</div></div>';
                 cTable.append(rowStr);
             }
 
@@ -159,7 +163,6 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
             //绑定事件
             cTable.all(".vs_div_table_content").each(function(item){
                 var colIndex = parseInt(item.attr("col"));
-                item.width(widthArray[colIndex] - 2);
                 item.on("click", function(){
                     var clickRow = Node.one(this).attr("row");
                     self.setSelected(clickRow);
@@ -169,7 +172,6 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
             //绑定事件
             cTable.all(".vs_div_table_content_right").each(function(item){
                 var colIndex = parseInt(item.attr("col"));
-                item.width(widthArray[colIndex] - 2);
                 item.on("click", function(){
                     var clickRow = Node.one(this).attr("row");
                     self.setSelected(clickRow);
@@ -179,7 +181,6 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
             //绑定事件
             cTable.all(".vs_div_table_content_bottom").each(function(item){
                 var colIndex = parseInt(item.attr("col"));
-                item.width(widthArray[colIndex] - 2);
                 item.on("click", function(){
                     var clickRow = Node.one(this).attr("row");
                     self.setSelected(clickRow);
@@ -189,7 +190,6 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
             //绑定事件
             cTable.all(".vs_div_table_content_bottom_right").each(function(item){
                 var colIndex = parseInt(item.attr("col"));
-                item.width(widthArray[colIndex] - 2);
                 item.on("click", function(){
                     var clickRow = Node.one(this).attr("row");
                     self.setSelected(clickRow);
@@ -222,7 +222,7 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                 var selectEvent = self.get("selectEvent");
                 if(selectEvent != undefined)
                 {
-                    selectEvent(self.get("data")[index - 1]);
+                    selectEvent(self.get("data")[index]);
                 }
             }
         },
@@ -242,13 +242,13 @@ KISSY.add("vs-grid-table", ["./node", "./base"], function(S, require) {
                 }
             }
         },
-        getSelectedId:function()
+        getSelectedData:function()
         {
             var self = this;
             var select = self.get("select");
             if(select > 0)
             {
-                return self.get("data")[select - 1]["id"];
+                return self.get("data")[select - 1];
             }
             else {
                 return null;

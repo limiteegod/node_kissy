@@ -23,14 +23,12 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
         width:{
             value:310
         },
-        height:{
-            value:310
-        },
         click:{
-            value:function()
-            {
-                alert("Ok");
-            }
+            value:function(){}
+        },
+        //是否可以选择多项
+        multiple:{
+            value:false
         }
     };
 
@@ -38,13 +36,18 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
         _init:function()
         {
             var self = this;
+            self.vData = {};
+            self.vDataArray = [];
             var width = self.get("width");
             var roundWidth = width - 20;
             var imgUrl = CurSite.getAbsolutePath("img/data_select.png");
             self.container.append('<div class="container" style="float:left;width:' + roundWidth + 'px;"></div>');
 
             var selectButton = Node.one('<div class="container" style="float:left;cursor:pointer;padding-left:2px;padding-top:5px;width:' + 20 + 'px;"><img width="20px" height="20px" src="' + imgUrl + '"/></div>');
-            selectButton.on("click", self.get("click"));
+            selectButton.on("click", function(){
+                var cb = self.get("click");
+                cb(self);
+            });
             self.container.append(selectButton);
 
             var divList = self.container.children();
@@ -55,7 +58,20 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
         setData:function(data)
         {
             var self = this;
-            self.vsRoundInput.setData(data);
+            if(!self.get("multiple"))
+            {
+                self.vData = {};
+                self.vDataArray = [];
+            }
+            self.vData[data.id] = 0;
+            self.vDataArray[0] = data;
+            self.vsRoundInput.setData(data.name);
+        },
+        //获得控件绑定的数据
+        getData:function()
+        {
+            var self = this;
+            return self.vDataArray;
         }
     });
     return VsDataSelect;

@@ -114,6 +114,15 @@ CurSite.getFrameDocById = function(wId)
     }
     return cDoc;
 };
+CurSite.getFrameWinById = function(wId)
+{
+    var cWin = window.frames[wId].contentWindow;
+    if(cWin == undefined)
+    {
+        cWin = window.frames[wId].window;
+    }
+    return cWin;
+};
 /**
  * get cookies
  */
@@ -147,6 +156,20 @@ CurSite.getDefualtKey = function()
 CurSite.getDefaultIv = function()
 {
     return "AAAAAAAAAAA=";
+};
+
+CurSite.encryptUrl = function(data, Json)
+{
+    var self = this;
+    var msgNode = self.encrypt({digestType:'3des-empty'}, null, Json.stringify(data));
+    return encodeURIComponent(msgNode.body);
+};
+
+CurSite.decryptUrl = function(str, Json)
+{
+    var self = this;
+    var decodedBodyStr = self.decrypt({digestType:'3des-empty'}, null, str);
+    return Json.parse(decodedBodyStr);
 };
 
 CurSite.encrypt = function(headNode, key, bodyStr)

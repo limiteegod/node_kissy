@@ -40,6 +40,10 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
         },
         html: {
             value:''
+        },
+        //是否正在校验子页面的数据
+        checking: {
+            value:false
         }
     };
 
@@ -48,6 +52,7 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
         {
             var self = this;
             var wId = CurSite.createUUID();
+            self.set("wId", wId);   //设置frame的唯一id
             var body = Node.one("body");
             var bodyWidth = document.body.clientWidth;
             var bodyHeight = window.innerHeight;
@@ -69,12 +74,12 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             });
             var cWidth = self.get("width") - 10;
             var cHeight = self.get("height") - 10;
-            var cTable = Node.one('<div style="overflow-x: hidden;position:absolute;left:5px;top:26px;width:' + cWidth + 'px;height:' + (cHeight - 25 - 32) + 'px;"></div>');
-            var title = Node.one('<div style="overflow-x: hidden;text-align:left;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
-            var bottomField = Node.one('<div style="overflow-x: hidden;border-top:1px solid #28afae;left:5px;top:' + (cHeight - 30) + 'px;position:absolute;width:' + cWidth + 'px;height:28px;"></div>');
+            var cTable = Node.one('<div style="overflow:hidden;position:absolute;left:5px;top:26px;width:' + cWidth + 'px;height:' + (cHeight - 25 - 32) + 'px;"></div>');
+            var title = Node.one('<div style="overflow: hidden;text-align:left;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
+            var bottomField = Node.one('<div style="overflow: hidden;border-top:1px solid #28afae;left:5px;top:' + (cHeight - 30) + 'px;position:absolute;width:' + cWidth + 'px;height:28px;"></div>');
             if(html.length == 0)
             {
-                var frame = Node.one('<iframe id="' + wId + '" frameborder="no" border="0" style="width:' + cWidth + 'px;height:' + (cHeight - 25) + 'px;"></iframe>');
+                var frame = Node.one('<iframe id="' + wId + '" frameborder="no" border="0" style="width:' + cWidth + 'px;height:' + (cHeight - 57) + 'px;"></iframe>');
                 frame.attr("src", CurSite.getAbsolutePath(self.get("url")) + "&frameId=" + wId);
                 cTable.append(frame);
             }
@@ -110,22 +115,41 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             body.append(self.backDiv);
             body.append(self.widowDiv);
         },
+        //回调页面中的回调函数
+        _callBack:function(index, err, data)
+        {
+            var self = this;
+            var ctrBt = self.get("controlBt")[index];
+            var cb = ctrBt.cb;
+            if(cb)
+            {
+                if(cb(err, data))
+                {
+                    self.close();
+                }
+            }
+            else
+            {
+                self.close();
+            }
+        },
         _bindBtEvent:function(btNode)
         {
             var self = this;
             btNode.on("click", function(){
                 var index = parseInt(Node.one(this).attr("index"));
-                var cb = self.get("controlBt")[index].cb;
-                if(cb)
+                var ctrBt = self.get("controlBt")[index];
+                if(ctrBt.check)
                 {
-                    if(cb())
-                    {
-                        self.close();
-                    }
+                    //如果校验页面中的数据
+                    var cWin = CurSite.getFrameWinById(self.get("wId"));
+                    cWin.check(function(err, data){
+                        self._callBack(index, err, data);
+                    });
                 }
                 else
                 {
-                    self.close();
+                    self._callBack(index);
                 }
             });
         },
