@@ -54,10 +54,20 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             var wId = CurSite.createUUID();
             self.set("wId", wId);   //设置frame的唯一id
             var body = Node.one("body");
-            var bodyWidth = document.body.clientWidth;
+            var bodyWidth = window.innerWidth;
+            var backWidth = document.body.scrollWidth; //the width of the back div
+            var backHeight = document.body.scrollHeight;
             var bodyHeight = window.innerHeight;
-            var left = (bodyWidth - self.get("width"))/2;
-            var top = (bodyHeight - self.get("height"))/2;
+            if(self.get("width") > bodyWidth)
+            {
+                self.set("width", bodyWidth);
+            }
+            if(self.get("height") > bodyHeight)
+            {
+                self.set("height", bodyHeight);
+            }
+            var left = (bodyWidth - self.get("width"))/2 + window.scrollX;
+            var top = (bodyHeight - self.get("height"))/2 + window.scrollY;
             var html = self.get("html");
             self.container.html("");
             self.widowDiv = Node.one('<div class="vs_div_talbe_border" style="position: absolute;left:' + left + 'px;top:' + top + 'px;width:' + self.get("width") + 'px"></div>');
@@ -111,7 +121,7 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
                 bottomField.append(btNode);
                 self._bindBtEvent(btNode);
             }
-            self.backDiv = Node.one('<div class="div_window_back" style="position: absolute;;left:0px;top:0px;width:' + bodyWidth + 'px;height:' + bodyHeight + 'px"></div>');
+            self.backDiv = Node.one('<div class="div_window_back" style="position: absolute;;left:0px;top:0px;width:' + backWidth + 'px;height:' + backHeight + 'px"></div>');
             body.append(self.backDiv);
             body.append(self.widowDiv);
         },

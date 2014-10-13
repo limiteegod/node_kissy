@@ -237,3 +237,9 @@ CurSite.sendDigest = function(Io, Json, cmd, key, bodyNode, cb)
         }
     }});
 };
+
+KISSY.ready(function(){
+    KISSY.use("io,node,json", function(S, Io, Node){
+
+    });
+});
