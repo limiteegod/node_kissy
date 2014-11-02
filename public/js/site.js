@@ -236,10 +236,4 @@ CurSite.sendDigest = function(Io, Json, cmd, key, bodyNode, cb)
             cb(null, backBodyNode);
         }
     }});
-};
-
-KISSY.ready(function(){
-    KISSY.use("io,node,json", function(S, Io, Node){
-
-    });
-});
+}

@@ -26,6 +26,9 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
         click:{
             value:function(){}
         },
+        focusout:{
+            value:null
+        },
         //是否可以选择多项
         multiple:{
             value:false
@@ -53,7 +56,18 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
             var divList = self.container.children();
             var setHDiv = divList[0];
 
-            self.vsRoundInput = new VsRoundInput(setHDiv, {width:roundWidth});
+            self.vsRoundInput = new VsRoundInput(setHDiv, {width:roundWidth, focusout:function(){
+                var inputVal = self.vsRoundInput.getData();
+                if(inputVal.length == 0)
+                {
+                    self.setData(null);
+                }
+                var fOutFn = self.get("focusout");
+                if(fOutFn)
+                {
+                    fOutFn();
+                }
+            }});
         },
         setData:function(data)
         {
@@ -63,9 +77,12 @@ KISSY.add("vs-data-select", ["./node", "./base", "./vs-round-input"], function(S
                 self.vData = {};
                 self.vDataArray = [];
             }
-            self.vData[data.id] = 0;
-            self.vDataArray[0] = data;
-            self.vsRoundInput.setData(data.name);
+            if(data)
+            {
+                self.vData[data.id] = 0;
+                self.vDataArray[0] = data;
+                self.vsRoundInput.setData(data.name);
+            }
         },
         //获得控件绑定的数据
         getData:function()

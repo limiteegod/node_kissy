@@ -24,6 +24,9 @@ KISSY.add("vs-round-input", ["./node", "./base"], function(S, require) {
         },
         height:{
             value:30
+        },
+        focusout:{
+            value:null
         }
     };
 
@@ -77,6 +80,12 @@ KISSY.add("vs-round-input", ["./node", "./base"], function(S, require) {
             cTableContent.append(self.cInput);
             cTable.append(cTableContent);
             self.container.append(cTable);
+
+            var fOutFn = self.get("focusout");
+            if(fOutFn)
+            {
+                self.cInput.on("focusout", fOutFn)
+            }
         },
         setData:function(data)
         {
