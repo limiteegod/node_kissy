@@ -1,5 +1,10 @@
 var CurSite = new function(){};
-CurSite.site = window.document.location.protocol + "//" + window.document.location.hostname + ":" + window.document.location.port;
+CurSite.site = window.document.location.protocol + "//" + window.document.location.hostname;
+var port = window.document.location.port;
+if(port && port.length > 0)
+{
+    CurSite.site +=  ":" + port;
+}
 CurSite.getContextPath = function() {
     /*var b = document.location.pathname.substr(1);
     b = "/" + b.substr(0, b.indexOf("/"));
