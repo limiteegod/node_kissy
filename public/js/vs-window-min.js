@@ -85,7 +85,7 @@ KISSY.add("vs-window", ["./node", "./base"], function(S, require) {
             var cWidth = self.get("width") - 10;
             var cHeight = self.get("height") - 10;
             var cTable = Node.one('<div style="overflow:hidden;position:absolute;left:5px;top:26px;width:' + cWidth + 'px;height:' + (cHeight - 25 - 32) + 'px;"></div>');
-            var title = Node.one('<div style="overflow: hidden;text-align:left;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
+            var title = Node.one('<div style="overflow:pages/admin/operatio hidden;text-align:left;border-bottom:1px solid #28afae;left:5px;top:7px;position:absolute;width:' + cWidth + 'px;height:18px;">&nbsp;' + self.get("title") + '</div>');
             var bottomField = Node.one('<div style="overflow: hidden;border-top:1px solid #28afae;left:5px;top:' + (cHeight - 30) + 'px;position:absolute;width:' + cWidth + 'px;height:28px;"></div>');
             if(html.length == 0)
             {
