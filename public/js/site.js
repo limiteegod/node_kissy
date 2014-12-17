@@ -221,6 +221,7 @@ CurSite.sendDigest = function(Io, Json, cmd, key, bodyNode, cb)
     {
         var key = cookies["st"];
     }
+
     var headNode = {cmd:cmd, digestType:"3des", userId:cookies["userId"], userType:cookies["userType"]};
     var msgNode = CurSite.encrypt(headNode, key, Json.stringify(bodyNode));
     Io({type:"post", url:CurSite.interPath, data:{message:Json.stringify(msgNode)}, success:function(data){

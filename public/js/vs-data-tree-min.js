@@ -17,10 +17,10 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
 
     VsDataTree.ATTRS = {
         icoWidth:{
-            value:20
+            value:18
         },
         icoHeight:{
-            value:20
+            value:18
         },
         rowHeight:{
             value:24
@@ -58,34 +58,43 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
             }
             self._setActionListener(self.contentDiv);
         },
-        _getCtrPath:function(hasChildren, expanded)
+        _getCtrPath:function(hasChildren, expanded,lever)
         {
             var self = this;
             var ctlPath;
             if(hasChildren > 0 && expanded == 0)
             {
-                ctlPath = 'img/vs_tree_parent_control_button.png';
+                //ctlPath = 'img/menu-arrow-bottom.gif';
+                ctlPath = 'img/menu-arrow-null.gif';
             }
             else
             {
-                ctlPath = 'img/vs_tree_child_control_button.png';
+               // ctlPath = 'img/menu-arrow-top.gif';
+                ctlPath = 'img/menu-arrow-null.gif';
+            }
+            if(lever){
+                ctlPath = 'img/menu-arrow-null.gif';
             }
             return CurSite.getAbsolutePath(ctlPath);
         },
-        _getIcoPath:function(hasChildren)
+        _getIcoPath:function(hasChildren,lever)
         {
             var self = this;
             var ico;
             if(hasChildren)
             {
-                ico = 'img/vs_tree_parent_node.png';
+                ico = 'img/icon-folder.gif';
             }
             else
             {
-                ico = 'img/vs_list_ico.png';
+                ico = 'img/icon-file.gif';
+            }
+            if(lever){
+                ico = 'img/icon-folder-open.gif';
             }
             return CurSite.getAbsolutePath(ico);
         },
+
         _getRowHtml:function(data, level)
         {
             var self = this;
@@ -98,9 +107,18 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
             var textWidth = 80;
             var margin_left = level*(ctlBtWidth + 2);
             var rowWidth = textWidth + icoWidth + ctlBtWidth + margin_left;
-            var rowStr = '<div parent="' + data.parent + '" expanded="0" hasChildren="' + data.hasChildren + '" level="' + level + '" id="' + data.id + '" class="clearfix"" style="padding-left:' + margin_left + 'px">';
+            var classValue="clearfix";
+            if(data.hasChildren==1){
+                classValue+=" parent_tree";
+            }else{
+                classValue+=" son_tree";
+                ctlPath=self._getCtrPath(data.hasChildren, 0,1);
+            }
+
+            var rowStr = '<div parent="' + data.parent + '" expanded="0" hasChildren="' + data.hasChildren + '" level="' + level + '" id="' + data.id + '" class="'+classValue+'" style="padding-left:' + margin_left + 'px">';
             //control button
-            var margin_top = 4;
+
+            var margin_top = 3;
             rowStr += '<div dataid="' + data.id + '" col="-1" class="vs_grid_content" style="width:' + ctlBtWidth + 'px;height:' + rowHeight + 'px;margin-top:' + margin_top + 'px;cursor:pointer;">';
             rowStr += '<img src="' + ctlPath + '" width="' + ctlBtWidth + '" height="' + ctlBtWidth + '">';
             rowStr += '</div>';
@@ -123,14 +141,12 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
         _setNodeActionListener:function(item)
         {
             var self = this;
-            item.children('div[col="-1"]').each(function(cItem){
-                cItem.on("click", function(){
-                    var cNode = Node.one(this);
-                    var id = cNode.attr("dataid");
-                    self.expand(id);
-                });
-            });
 
+            item.on("click",function(){
+                var cNode = Node.one(this);
+                var id = cNode.attr("id");
+                self.expand(id);
+            });
             item.children('div[col="1"]').each(function(cItem){
                 cItem.on("click", function(){
                     var cNode = Node.one(this);
@@ -143,21 +159,24 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
         {
             var self = this;
             var selected = self.get("selected");
-            if(selected == id)
+
+            var isParent=self.contentDiv.one('#' + id).attr("hasChildren");
+            if(isParent==1){
                 return;
+            }
+            if(selected == id){
+                return;
+            }
             if(selected)
             {
-                var srcNode = self.contentDiv.one('#' + selected).one('div[col="1"]');
-                srcNode.css("background", "none");
+                self.contentDiv.one('#' + selected).css("background", "#eee");
             }
             if(id)
             {
                 var selector = '#' + id;
-                var tNode = self.contentDiv.one(selector).one('div[col="1"]');
-                tNode.css("background", "#DDDDDD");
+                self.contentDiv.one(selector).css("background", "#a3cafe");
             }
             self.set("selected", id);
-
             //触发选择变化事件
             var selectionChange = self.get("selectionChange");
             if(selectionChange)
@@ -200,25 +219,33 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                 if(expanded <= 0)
                 {
                     var level = parseInt(cNode.attr("level")) + 1;
-                    self.getChildren(id, function(err, data){
-                        nodeData.children = data;
-                        for(var key in data)
-                        {
-                            self.nodeDataList[data[key].id] = data[key];
-                            var rowStr = self._getRowHtml(data[key], level);
-                            var newNode = Node.one(rowStr);
-                            self._setNodeActionListener(newNode);
-                            newNode.insertAfter(cNode);
-                        }
-                    });
+                    if(self.contentDiv.all('div[parent="' + id + '"]').html()==null){
+                        self.getChildren(id, function(err, data){
+                            nodeData.children = data;
+                            for(var key in data)
+                            {
+                                self.nodeDataList[data[key].id] = data[key];
+                                var rowStr = self._getRowHtml(data[key], level);
+                                var newNode = Node.one(rowStr);
+                                self._setNodeActionListener(newNode);
+                                newNode.css("display", "none");
+                                newNode.insertAfter(cNode);
+                            }
+                            self.contentDiv.all('div[parent="' + id + '"]').slideDown(0.2,null,'swing');
+                        });
+                    }else{
+                        self.contentDiv.all('div[parent="' + id + '"]').slideDown(0.2,null,'swing');
+                    }
                     cNode.attr("expanded", 1);
                     cNode.one('div[col="-1"]').one('img').attr("src", self._getCtrPath(1, 1));
+                    cNode.one('div[col="0"]').one('img').attr("src", self._getIcoPath(1, 1));
                 }
                 else    //收起节点
                 {
                     self._removeChildren(id);
                     cNode.attr("expanded", 0);
                     cNode.one('div[col="-1"]').one('img').attr("src", self._getCtrPath(1, 0));
+                    cNode.one('div[col="0"]').one('img').attr("src", self._getIcoPath(1));
                 }
             }
         },
@@ -239,7 +266,7 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                     self._removeChildren(child.id);
                 }
             }
-            self.contentDiv.all('div[parent="' + id + '"]').remove();
+            self.contentDiv.all('div[parent="' + id + '"]').slideUp(0.2,null,'swing');
         }
     });
     return VsDataTree;
