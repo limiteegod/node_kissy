@@ -231,7 +231,7 @@ body {
 
 
 .parent_tree{
-    background: url("../img/menu-header-bg.jpg") 0px 0px repeat-x #99F;
+    background: url("../img/menu-header-bg.jpg") 0px 0px repeat-x #FFF;
     color: #0086c2;
     border-bottom: 1px solid #CDC8CF;
     border-left: 1px solid #CDC8CF;
@@ -239,7 +239,7 @@ body {
 
 }
 .parent_tree:hover{
-    background: url("../img/menu-header-bg-hower.jpg") 0px 0px repeat-x #99F;
+    background: url("../img/menu-header-bg-hower.jpg") 0px 0px repeat-x #FFF;
     color:#036cb4;
 }
 

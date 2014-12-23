@@ -115,9 +115,8 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                 ctlPath=self._getCtrPath(data.hasChildren, 0,1);
             }
 
-            var rowStr = '<div parent="' + data.parent + '" expanded="0" hasChildren="' + data.hasChildren + '" level="' + level + '" id="' + data.id + '" class="'+classValue+'" style="padding-left:' + margin_left + 'px">';
+            var rowStr = '<div parent="' + data.parent + '" expanded="0" hasClick="0" hasChildren="' + data.hasChildren + '" level="' + level + '" id="' + data.id + '" class="'+classValue+'" style="padding-left:' + margin_left + 'px">';
             //control button
-
             var margin_top = 3;
             rowStr += '<div dataid="' + data.id + '" col="-1" class="vs_grid_content" style="width:' + ctlBtWidth + 'px;height:' + rowHeight + 'px;margin-top:' + margin_top + 'px;cursor:pointer;">';
             rowStr += '<img src="' + ctlPath + '" width="' + ctlBtWidth + '" height="' + ctlBtWidth + '">';
@@ -142,11 +141,6 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
         {
             var self = this;
 
-            item.on("click",function(){
-                var cNode = Node.one(this);
-                var id = cNode.attr("id");
-                self.expand(id);
-            });
             item.children('div[col="1"]').each(function(cItem){
                 cItem.on("click", function(){
                     var cNode = Node.one(this);
@@ -154,16 +148,24 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                     self.setSelected(id);
                 });
             });
+
+            item.on("click",function(){
+                var cNode = Node.one(this);
+                var id = cNode.attr("id");
+
+                self.expand(id);
+            });
+
         },
         setSelected:function(id)
         {
             var self = this;
             var selected = self.get("selected");
-
             var isParent=self.contentDiv.one('#' + id).attr("hasChildren");
             if(isParent==1){
                 return;
             }
+
             if(selected == id){
                 return;
             }
@@ -212,12 +214,20 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
             var self = this;
             var nodeData = self.nodeDataList[id];
             var cNode = Node.one("#" + id);
+
+            //判断是否点击，处理多次点击情景
+            var isClick = parseInt(cNode.attr("hasClick"));
+            if(isClick == 1){
+                return;
+            }
+            cNode.attr("hasClick",1);
             var hasChildren = parseInt(cNode.attr("hasChildren"));
             var expanded = parseInt(cNode.attr("expanded"));
             if(hasChildren > 0)
             {
                 if(expanded <= 0)
                 {
+
                     var level = parseInt(cNode.attr("level")) + 1;
                     if(self.contentDiv.all('div[parent="' + id + '"]').html()==null){
                         self.getChildren(id, function(err, data){
@@ -232,9 +242,11 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                                 newNode.insertAfter(cNode);
                             }
                             self.contentDiv.all('div[parent="' + id + '"]').slideDown(0.2,null,'swing');
+                            cNode.attr("hasClick",0);
                         });
                     }else{
                         self.contentDiv.all('div[parent="' + id + '"]').slideDown(0.2,null,'swing');
+                        cNode.attr("hasClick",0);
                     }
                     cNode.attr("expanded", 1);
                     cNode.one('div[col="-1"]').one('img').attr("src", self._getCtrPath(1, 1));
@@ -244,10 +256,12 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                 {
                     self._removeChildren(id);
                     cNode.attr("expanded", 0);
+                    cNode.attr("hasClick",0);
                     cNode.one('div[col="-1"]').one('img').attr("src", self._getCtrPath(1, 0));
                     cNode.one('div[col="0"]').one('img').attr("src", self._getIcoPath(1));
                 }
             }
+
         },
         //删除所有的子节点
         _removeChildren:function(id)
@@ -266,6 +280,7 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
                     self._removeChildren(child.id);
                 }
             }
+            self.contentDiv.all('div[parent="' + id + '"]').css("background", "#eee");
             self.contentDiv.all('div[parent="' + id + '"]').slideUp(0.2,null,'swing');
         }
     });
