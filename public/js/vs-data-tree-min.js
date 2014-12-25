@@ -227,7 +227,6 @@ KISSY.add("vs-data-tree", ["./node", "./base"], function(S, require) {
             {
                 if(expanded <= 0)
                 {
-
                     var level = parseInt(cNode.attr("level")) + 1;
                     if(self.contentDiv.all('div[parent="' + id + '"]').html()==null){
                         self.getChildren(id, function(err, data){
